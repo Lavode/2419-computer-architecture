@@ -249,5 +249,34 @@ used in other parts of our program, or simply crash if we happen to access a
 memory block which is outside the range the OS allocated to us.
 
 
-\subsection{Structs and Unions}
+\section{Structs and Unions}
+
+For the purpose of this exercise we'll assume chars to be one, shorts to be
+two, and ints to be four, bytes long.
+
+As such, the defined struct contains one 10-byte char array, two one-byte
+chars, and one two-byte short, adding up to a total of \texttt{10 + 1 + 1 + 2 =
+14} bytes.
+
+The defined union - within which the various variables will overlap insofar as they
+all start at the same location in memory - will therefore have its length defined by its
+longest member, the 12-byte char array, for a total length of \texttt{12}
+bytes.
+
+As such, the output (due to lack of newlines in the printf format string) will be \texttt{1412}.
+
+\begin{figure}
+	\centering
+	\textbf{Memory layout of struct and union}\par\medskip
+	\includegraphics[width=\textwidth]{resources/memory_layout.png}
+\end{figure}
+
+\section{Define}
+
+Define works by creating an 'alias' for a given expression. All occurences of
+that alias will then be replaced by its definition by the preprocessor.
+
+As such, the program's output will be \texttt{15} - that is, if it wouldn't
+refuse to compile due to an undefined \texttt{EXIT\_SUCCESS}.
+
 \end{document}
