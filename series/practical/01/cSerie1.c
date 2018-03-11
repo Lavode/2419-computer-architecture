@@ -1,7 +1,6 @@
-/* TODO: Task (b) Please fill in the following lines, then remove this line.
- *
- * author(s):   FIRSTNAME LASTNAME 
- *              (FIRSTNAME2 LASTNAME2)
+ /*
+ * author(s):   Michael Senn, 16-126-880
+ *              Pascal Gerig, 16-104-721
  *
  * Please follow the instructions given in comments below. 
  * The file outputc1 shows what the output of this program 
@@ -114,15 +113,47 @@ typedef unsigned long word;
 typedef unsigned short halfword;
 typedef unsigned char byte;
 
-/* TODO Task (c) add bitfields InstructionTypeI, InstructionTypeJ and InstructionTypeR here */
+typedef struct InstructionTypeI {
+	unsigned immediate :16;
+	unsigned rt :5;
+	unsigned rs :5;
+	unsigned opcode :6;
+} InstructionTypeI;
 
-/* TODO Task (d) add union Instruction here */
+typedef struct InstructionTypeJ {
+	unsigned address :26;
+	unsigned opcode :6;
+} InstructionTypeJ;
 
-/* TODO Task (e) add enumeration InstructionType here */
+typedef struct InstructionTypeR {
+	unsigned funct :6;
+	unsigned shamt :5;
+	unsigned rd :5;
+	unsigned rt :5;
+	unsigned rs :5;
+	unsigned opcode :6;
+} InstructionTypeR;
 
-/* TODO Task (f) add structure Operation here */
+typedef union Instruction {
+	InstructionTypeI i;
+	InstructionTypeJ j;
+	InstructionTypeR r;
+} Instruction;
 
-/* TODO Task (g) add structure Function here */
+typedef enum InstructionType {
+	iType, jType, rType, specialType
+} InstructionType;
+
+typedef struct Operation {
+	char name[OP_NAME_LENGTH];
+	InstructionType type;
+	void (*operation)(Instruction *instruction);
+} Operation;
+
+typedef struct Function {
+	char name[FUNC_NAME_LENGTH];
+	void (*function)(Instruction *instruction);
+} Function;
 
 /* Operation and function dispatcher */
 Operation operations[OPERATION_COUNT];
@@ -193,7 +224,29 @@ void initialize() {
 
 
 void printInstruction(Instruction *i) {
-/* TODO Task (h) complete printInstruction here */    
+	Operation o = operations[i->i.opcode];
+
+	if (o.type == 0) {
+		/* iType  */
+		InstructionTypeI* instr = (InstructionTypeI*)i;
+		printf("%-4s %02d, %02d, 0x%04x\n", o.name, instr->rt, instr->rs, instr->immediate);
+	} else if (o.type == 1) {
+		/* jType */
+		InstructionTypeJ* instr = (InstructionTypeJ*)i;
+		printf("%-4s 0x%08x\n", o.name, instr->address);
+	} else if (o.type == 2) {
+		/* rType */
+		/* Note: rType instructions have opcode 0, operation with
+		 * opcode 0 is 'zero', which is of type rType, hence this
+		 * works.
+		 */
+		Function f = functions[i->r.funct];
+		InstructionTypeR* instr = (InstructionTypeR*)i;
+		printf("%-4s %02d, %02d, %02d, 0x%04x\n", f.name, instr->rd, instr->rs, instr->rt, instr->shamt);
+	} else if (o.type == 3) {
+		/* specialType */
+		printf("%-4s", o.name);
+	}
 }
 
 void testPrint(word w) {
