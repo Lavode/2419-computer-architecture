@@ -98,6 +98,18 @@ indicates the end of the string. This adds up to a total of 22 bytes.
 
 \section{Array access using pointers}
 
+All of the listed methods have the same issue - they do not check whether the
+supplied index is within the bounds of the given array. This leads to issues
+with potentially accessing memory not belonging to the array - which will
+return random values in case of uninitialized or otherwise occupied memory
+blocks, or cause the application to crash in case of accessing memory not
+belonging to the application.
+
+This issue can easily be fixed by checking whether the index is between 0 and
+the upper bound - which can be determined by divinding the array's size by the
+size of one item. If an invalid index is supplied, the function should eg print
+a meaningful error message and quit.
+
 \subsection{Int array}
 
 \begin{lstlisting}
