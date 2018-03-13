@@ -245,7 +245,7 @@ void printInstruction(Instruction *i) {
 		printf("%-4s %02d, %02d, %02d, 0x%04x\n", f.name, instr->rd, instr->rs, instr->rt, instr->shamt);
 	} else if (o.type == 3) {
 		/* specialType */
-		printf("%-4s", o.name);
+		printf("%-4s\n", o.name);
 	}
 }
 
