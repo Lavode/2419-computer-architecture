@@ -105,6 +105,7 @@ void test_lw() {
 	/* Setting up memory as:
 	 * 2D 51 AC 0E 9A 4E 27 63
 	 */
+	word expected;
 	word location = 0x00001000;
 	word w1 = 0x2D51AC0E;
 	word w2 = 0x0A4E2763;
@@ -128,7 +129,7 @@ void test_lw() {
 
 	T1 = 0x00001001;
 	test_execute(create_itype_hex(0x0001, I_T0, I_T1, OC_LW));
-	word expected = ((w1 & 0x0000FFFF) << 2 * 8) + ((w2 & 0xFFFF0000) >> 2 * 8);
+	expected = ((w1 & 0x0000FFFF) << 2 * 8) + ((w2 & 0xFFFF0000) >> 2 * 8);
 	assert(T0 == expected);
 }
 
