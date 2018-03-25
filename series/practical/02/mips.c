@@ -216,11 +216,12 @@ void mips_addi(Instruction *instruction) {
 void mips_jal(Instruction *instruction) {
 	InstructionTypeJ instr = instruction->j;
 
-	/* Something wonky here, either their tests or my understanding is inccorect. */
-	printf("pc: %u, addr: %u\n", pc, instr.address);
-	RA = pc + 4;
-	pc = instr.address;
-	printf("pc: %u, RA: %u\n", pc, RA);
+	RA = pc;
+	/* Destination address is:
+	 * a) shifted right two bits before being passed to `jal` (no information lost, all instructions word-aligned)
+	 * b) combined with 4 MSBs of PC to determine destination address
+	 */
+	pc = (pc & 0xF0000000) + (instr.address << 2);
 }
 
 /* LUI */
