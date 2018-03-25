@@ -104,17 +104,72 @@ void test_lui() {
 
 /* LW */
 void test_lw() {
-    /* TODO: Task (d) add test for LW here */
-} 
+	/* Setting up memory as:
+	 * 2D 51 AC 0E 9A 4E 27 63
+	 */
+	word location = 0x00001000;
+	word w1 = 0x2D51AC0E;
+	word w2 = 0x0A4E2763;
+	storeWord(w1, location);
+	storeWord(w2, location + 4);
+
+	/* rt */
+	T0 = 0;
+
+	/* Retrieve w1 */
+	T1 = 0x00001000;
+	test_execute(create_itype_hex(0x0000, I_T0, I_T1, OC_LW));
+	assert(T0 == w1);
+
+	/* Retrieve w2 */
+	T1 = 0x00001000;
+	test_execute(create_itype_hex(0x0004, I_T0, I_T1, OC_LW));
+	assert(T0 == w2);
+
+	/* Retrieve lower two bytes of w1 and upper two bytes of w2 */
+
+	T1 = 0x00001001;
+	test_execute(create_itype_hex(0x0001, I_T0, I_T1, OC_LW));
+	word expected = ((w1 & 0x0000FFFF) << 2 * 8) + ((w2 & 0xFFFF0000) >> 2 * 8);
+	assert(T0 == expected);
+}
 
 /* ORI */
 void test_ori() {
-    /* TODO: Task (d) add test for ORI here */
+	/* 0 || x = x */
+	test_execute(create_itype_hex(0x12AB, I_T0, I_ZERO, OC_ORI));
+	assert(T0 == 0x000012AB);
+
+	/* Lower half of T1 empty */
+	T1 = 0xFA420000;
+	test_execute(create_itype_hex(0x12AB, I_T0, I_T1, OC_ORI));
+	assert(T0 == 0xFA4212AB);
+
+	/* Lastly with two random variables */
+	T1 = 0x610A2C94;
+	test_execute(create_itype_hex(0x58D1, I_T0, I_T1, OC_ORI));
+	assert(T0 == 0x610A7CD5);
 }
 
 /* SUB */
 void test_sub() {
-    /* TODO: Task (d) add test for SUB here */
+	/* Result exactly 0 */
+	T1 = 1;
+	T2 = 1;
+	test_execute(create_rtype_hex(FC_SUB, 0x0000, I_T0, I_T1, I_T2, OC_ADD));
+	assert(T0 == 0);
+
+	/* Negative results */
+	T1 = 5;
+	T2 = 2;
+	test_execute(create_rtype_hex(FC_SUB, 0x0000, I_T0, I_T1, I_T2, OC_ADD));
+	assert(T0 == -3);
+
+	/* Negative parameter(s) */
+	T1 = -5;
+	T2 = -3;
+	test_execute(create_rtype_hex(FC_SUB, 0x0000, I_T0, I_T1, I_T2, OC_ADD));
+	assert(T0 == 2);
 }
 
 /* SW */
