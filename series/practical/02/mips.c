@@ -1,7 +1,6 @@
-/* TODO: Task (b) Please fill in the following lines, then remove this line.
- *
- * author(s):   FIRSTNAME LASTNAME 
- *              (FIRSTNAME2 LASTNAME2)
+ /*
+ * author(s):   Pascal Gerig
+ *              Michael Senn
  * modified:    2010-01-07
  *
  */
@@ -80,7 +79,10 @@ void printInstruction(Instruction *i) {
 
 /* Store a word to memory */
 void storeWord(word w, word location) {
-	/* TODO: Task (c) implement storeWord here */
+	memory[location]     = (w >> (8*3)) & 0xFF;
+	memory[location + 1] = (w >> (8*2)) & 0xFF;
+	memory[location + 2] = (w >> (8*1)) & 0xFF;
+	memory[location + 3] = w & 0xFF;
 }
 
 /* Load a word from memory */
@@ -198,21 +200,34 @@ void stopOperation(Instruction *instruction) {
 
 /* ADD */
 void mips_add(Instruction *instruction) {
-	/* TODO: Task (e) implement ADD here */
+	InstructionTypeR instr = instruction->r;
+
+	registers[instr.rd] = (signed)registers[instr.rt] + (signed)registers[instr.rs];
 }
 
 /* ADDI */
 void mips_addi(Instruction *instruction) {
-	/* TODO: Task (e) implement ADDI here */
+	InstructionTypeI instr = instruction->i;
+
+	registers[instr.rt] = (signed)registers[instr.rs] + (signed)signExtend(instr.immediate);
 }
 
 /* JAL */
 void mips_jal(Instruction *instruction) {
-	/* TODO: Task (e) implement JAL here */}
+	InstructionTypeJ instr = instruction->j;
+
+	/* Something wonky here, either their tests or my understanding is inccorect. */
+	printf("pc: %u, addr: %u\n", pc, instr.address);
+	RA = pc + 4;
+	pc = instr.address;
+	printf("pc: %u, RA: %u\n", pc, RA);
+}
 
 /* LUI */
 void mips_lui(Instruction *instruction) {
-	/* TODO: Task (e) implement LUI here */
+	InstructionTypeI instr = instruction->i;
+
+	registers[instr.rt] = signExtend(instr.immediate) << (2 * 8);
 }
 
 /* LW */
@@ -235,6 +250,8 @@ void mips_sub(Instruction *instruction) {
 
 /* SW */
 void mips_sw(Instruction *instruction) {
-	/* TODO: Task (e) implement SW here */
+	InstructionTypeI instr = instruction->i;
+
+	storeWord(registers[instr.rt], registers[instr.rs] + (signed)signExtend(instr.immediate));
 }
 
