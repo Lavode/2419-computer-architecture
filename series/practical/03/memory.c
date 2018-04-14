@@ -135,6 +135,8 @@ void loadFile(char* filename) {
 
 	FILE* file = fopen(filename, "rb");
 	if (file) {
+		// Should also be able to pass in a pointer to word, and read 4
+		// bytes at once. Buuut.
 		while (fread(buf, 1, 4, file) == 4) {
 			out = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];
 			storeWord(out, location);

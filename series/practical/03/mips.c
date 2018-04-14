@@ -32,7 +32,14 @@ Function functions[FUNCTION_COUNT];
 /* Some useful helpers */
 
 void error(const char *functionName, const char *fileName, int lineNumber, char *message, ...) {
-   /* TODO: Task (e) implement error */
+	fprintf(stderr, "%s in %s, line %i: ", functionName, fileName, lineNumber);
+
+	va_list args;
+	va_start(args, message);
+	vfprintf(stderr, message, args);
+	va_end(args);
+
+	exit(EXIT_FAILURE);
 }
 
 
