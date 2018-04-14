@@ -1,7 +1,7 @@
-/* TODO: Task (b) Please fill in the following lines, then remove this line.
+/*
  *
- * author(s):   FIRSTNAME LASTNAME 
- *              (FIRSTNAME2 LASTNAME2)
+ * author(s):   Pascal Gerig
+ *              Michael Senn
  * modified:    2010-01-07
  *
  */
@@ -11,9 +11,13 @@
 #include "memory.h"
 #include "mips.h"
 #include "compiler.h"
- 
-int main ( int argc, char** argv ) {
-    /* TODO: Task (c) implement main */
-    return EXIT_SUCCESS;
-}
 
+int main ( int argc, char* argv[] ) {
+	if (argc != 3) {
+		printf("Usage: %s <expression> <file>\n", argv[0]);
+		return EXIT_FAILURE;
+	}
+
+	compiler(argv[1], argv[2]);
+	return EXIT_SUCCESS;
+}

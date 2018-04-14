@@ -1,7 +1,7 @@
-/* TODO: Task (b) Please fill in the following lines, then remove this line.
+/*
  *
- * author(s):   FIRSTNAME LASTNAME 
- *              (FIRSTNAME2 LASTNAME2)
+ * author(s):   Pascal Gerig
+ *              Michael Senn
  * modified:    2010-01-07
  *
  */

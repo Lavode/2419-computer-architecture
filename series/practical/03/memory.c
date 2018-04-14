@@ -1,7 +1,7 @@
-/* TODO: Task (b) Please fill in the following lines, then remove this line.
+/* 
  *
- * author(s):   FIRSTNAME LASTNAME 
- *              (FIRSTNAME2 LASTNAME2)
+ * author(s):   Pascal Gerig
+ *              Michael Senn
  * modified:    2010-01-07
  *
  */
@@ -129,7 +129,19 @@ void initializeMemory() {
 
 /* Load a file to memory */
 void loadFile(char* filename) {
-    /* TODO: Task (d) implement loadFile */
+	word location = 0;
+	unsigned char buf[4];
+	word out;
+
+	FILE* file = fopen(filename, "rb");
+	if (file) {
+		while (fread(buf, 1, 4, file) == 4) {
+			out = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];
+			storeWord(out, location);
+			location+= 4;
+		}
+		fclose(file);
+	}
 }
 
 /* ========================================================================== */
