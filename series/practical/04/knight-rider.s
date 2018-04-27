@@ -3,13 +3,13 @@
  Series 4 - Raspberry Pi Programming Part 1 - Running Light
  
  Group members:
- firstname lastname; firstname lastname; firstname lastname
+ Michael Senn, Pascal Gerig
  
  Individualised code by:
- firstname lastname
+ Worked on as a team, customizations included as comments.
  
  Exercise Version:
- ** denote the exercise version here (1, 2 or 3) **
+ 1
 
  Notes:
  We provide hints and guidance in the comments below and
@@ -37,16 +37,27 @@ configurePins:
 	BL	pinMode
 
 	// Set the latch pin to 'output' mode
-	/* to be implemented by student */
+	LDR R0, .LATCH_PIN
+	LDR R1, .OUTPUT
+	BL pinMode
 
 
 	// Set the clock pin to 'output' mode
-	/* to be implemented by student */
+	LDR R0, .CLOCK_PIN
+	LDR R1, .OUTPUT
+	BL pinMode
 
 	// Set the pins of BUTTON 1 and BUTTON 2 to 'input' mode 
-	/* to be implemented by student */
+	LDR R0, .BUTTON1_PIN
+	LDR R1, .INPUT
+	BL pinMode
+	
+	LDR R0, .BUTTON2_PIN
+	LDR R1, .INPUT
+	BL pinMode
 
 
+	// Set resistors to pull-up mode
 	LDR	R0, .BUTTON1_PIN
 	LDR	R1, .PUD_UP
 	BL	pullUpDnControl
@@ -57,71 +68,190 @@ configurePins:
 	
 
 start:
-	/* 
-	Implement the main logic for the running light here and in the loop below.
-	Depending on your implementation, you will probably need to initialise
-	- a register to hold the state of the LED bar
-	- a register to save the time delay for the LED
-	- registers to save the state of the two buttons
-	- a register for a counter variable
-	- and/or other (temporary) registers as you wish.
-	*/
+	// Data to shift out
+	MOV R4, #1
+	
+	// Direction to shift data
+	LDR R5, .LEFT
+	
+	// Sleep duration in ms
+	MOV R6, #500
+	
+	// State of button 1
+	LDR R7, .PUD_UP
+	// State of button 2
+	LDR R8, .PUD_UP
+	
+	BL knightRiderLoop
+	
 
-
+/* Main loop:
+ * - Send data to serial-to-parallel converter
+ * - Sleep
+ * - Adjust bit pattern to send
+ * - Adjust direction if needed
+ * - Adjust speed if either button pressed
+ * - Repeat
+ */
 knightRiderLoop:
-	/* 
-	Implement this loop to make the light move.
-	As described in the appendix of the exercise sheet, 
-	you can use the shiftOut subroutine to send serial data.
-	To do so
-	1. Set the latch pin to low
-	2. Send the data with shiftOut
-	3. Set the latch pin to high
-	*/
+	BL send_data
+	BL sleep
+	
+	BL shift_data
+	BL update_direction
+
+	BL check_faster_button
+	BLEQ increase_speed
+	
+	BL check_slower_button
+	BLEQ decrease_speed
+	// Student 3 customization: Replace BLEQ above with BLEQ below.
+	// BLEQ reset_speed
+	
+	BL knightRiderLoop
 
 
-	// Set latch pin low (read serial data)
-	/* to be implemented by student */
-	
-	// Send serial data (shiftOut)
-	/* to be implemented by student */
-
-	// Set latch pin high (write serial data to parallel output)
-	/* to be implemented by student */
-	
-	
-	
-	// Detect button presses and increase/decrease the delay
-	// Use the 'waitForButton' subroutine for each button
-	/* to be implemented by student */
-	
-
-	/* Other logic goes here, like updating variables, branching to the loop label, etc. */
-	/* to be implemented by student */
-	
-
-	
 exit:
 	MOV 	R7, #1				// System call 1, exit
 	SWI 	0				// Perform system call
 
 
-/*
--------------------------------------------------------------------------
- SUBROUTINES
--------------------------------------------------------------------------
 
-If you wish, you can define your own subroutines here.
-Make sure you save the registers on the stack to avoid conflicts.
-Here is an example: 
+// Send LOW to latch pin
+latchLow:
+	STMDB SP!, {R0, R1, LR}
+	
+	LDR R0, .LATCH_PIN
+	LDR R1, .LOW
+	BL digitalWrite
+	
+	LDMIA SP!, {R0, R1, PC}
+	
+	
+// Send HIGH to latch pin
+latchHigh:
+	STMDB SP!, {R0, R1, LR}
+	
+	LDR R0, .LATCH_PIN
+	LDR R1, .HIGH
+	BL digitalWrite
+	
+	LDMIA SP!, {R0, R1, PC}
 
-foo: 
-	STMDB SP!, {R3, R4, LR}
-	// ... do something here with registers R3 and R4 ...
-	LDMIA SP!, {R3, R4, PC} // end of foo subroutine, restore registers and jump
+
+// Send data stored in R4 to LED via serial-to-parallel converter
+// R0: Data pin
+// R1: Clock pin
+// R2: LSB (1) or MSB (0) first
+send_data:
+	STMDB SP!, {R0, R1, R2, R3, LR}
+	
+	BL latchLow
+	
+	LDR R0, .DATA_PIN
+	LDR R1, .CLOCK_PIN
+	LDR R2, .LSBFIRST
+	MOV R3, R4
+	// Student 2 customization:
+	// Replace MOV above with MVN below.
+	// MVN R3, R4
+	BL shiftOut
+	
+	BL latchHigh
+	
+	LDMIA SP!, {R0, R1, R2, R3, PC}
 
 
-*/ 
+// Adjust bit pattern stored in R4 ('moving' the LED)
+shift_data:
+	// If moving left, shift data left
+	CMP R5, #0
+	LSLEQ R4, R4, #1
+	
+	// If moving right, shift data right
+	CMP R5, #1
+	LSREQ R4, R4, #1
+	
+	MOV PC, LR
+
+
+// Reverse direction to move if either end of the LED strip reached
+update_direction:
+	// Reached left end -> start moving right
+	CMP R4, #128
+	LDREQ R5, .RIGHT
+	
+	// Reached right end -> start moving left
+	CMP R4, #1
+	LDREQ R5, .LEFT
+
+	MOV PC, LR
+
+
+// Sleep by R6 ms
+sleep:
+	STMDB SP!, {R0, LR}
+	
+	MOV R0, R6
+	BL delay
+	
+	LDMIA SP!, {R0, PC}
+
+
+// Decrease speed of LED, up to a maximum of 1000ms delay between hops.
+decrease_speed:
+	CMP R6, #1000
+	ADDLT R6, R6, #100
+	
+	MOV PC, LR
+
+
+// Increase speed of LED, up to a minimum of 100ms delay between hops.
+increase_speed:
+	CMP R6, #100
+	SUBGT R6, R6, #100
+	
+	MOV PC, LR
+
+
+// Reset speed to default value of 500ms
+reset_speed:
+	MOV R6, #500
+	
+	MOV PC, LR
+
+
+check_faster_button:
+	STMDB SP!, {R0, R1, R2, LR}
+
+	LDR R0, .BUTTON1_PIN
+	MOV R1, #100
+	// Pass old button state
+	MOV R2, R7
+	BL waitForButton
+	// Store new button state
+	MOV R7, R1
+	// If button was pressed
+	CMP R0, #1
+	
+	LDMIA SP!, {R0, R1, R2, PC}
+
+
+check_slower_button:
+	STMDB SP!, {R0, R1, R2, LR}
+
+	LDR R0, .BUTTON2_PIN
+	MOV R1, #100
+	// Pass old button state
+	MOV R2, R8
+	BL waitForButton
+	// Store new button state
+	MOV R8, R1
+	// If button was pressed
+	CMP R0, #1
+	
+	LDMIA SP!, {R0, R1, R2, PC}
+
 
 waitForButton:
 	/* 
@@ -200,4 +330,8 @@ waitForButton:
 // Button pins
 .BUTTON1_PIN:		.word	18
 .BUTTON2_PIN:		.word	25
+
+// Movement directions
+.LEFT:	.word	0
+.RIGHT:	.word	1
 
