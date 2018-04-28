@@ -140,9 +140,6 @@ latchHigh:
 
 
 // Send data stored in R4 to LED via serial-to-parallel converter
-// R0: Data pin
-// R1: Clock pin
-// R2: LSB (1) or MSB (0) first
 send_data:
 	STMDB SP!, {R0, R1, R2, R3, LR}
 	
